@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from accounts.models import Account, AccountTransaction
 from rest_framework.permissions import AllowAny
 from .serializers import AccountSerializer, TopUpAccountSerializer, WithdrawAccountSerializer, \
@@ -8,34 +9,30 @@ from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiTypes
+from .services import CreateAccountService
 
 
-class CreateAccountView(APIView):
+class CreateAccountView(GenericAPIView):
     permission_classes = (AllowAny,)
+    serializer_class = AccountSerializer
 
-    @extend_schema(
-        request=AccountSerializer,
-        responses={200: 'Success'}
-    )
     def post(self, request):
-        serializer = AccountSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
 
-        if serializer.is_valid(raise_exception=True):
-            account_number = serializer.validated_data['number']
-            currency = serializer.validated_data['currency']
-            amount = float(serializer.validated_data['amount'])
-            account = Account()
-            account.number = account_number
-            account.currency = currency
-            account.balance += amount
-            account.save()
+        serializer.is_valid(raise_exception=True)
+        account_number = serializer.validated_data['number']
+        currency = serializer.validated_data['currency']
+        amount = float(serializer.validated_data['amount'])
+        account = Account()
+        account.number = account_number
+        account.currency = currency
+        account.balance += amount
+        account.save()
 
-            return Response(
-                {'account_number': account.number, 'account_balance': account.balance, 'currency': account.currency},
-                status=status.HTTP_200_OK
-            )
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {'account_number': account.number, 'account_balance': account.balance, 'currency': account.currency},
+            status=status.HTTP_200_OK
+        )
 
 
 class TopUpView(APIView):
@@ -52,7 +49,6 @@ class TopUpView(APIView):
             account_number = serializer.validated_data['account_number']
             amount = serializer.validated_data['amount']
             account = get_object_or_404(Account, number=account_number)
-            print(f'{amount=}')
 
             account.balance += amount
             account.save()
@@ -83,12 +79,9 @@ class WithdrawAccountView(APIView):
         serializer = WithdrawAccountSerializer(data=request.data)
 
         if serializer.is_valid(raise_exception=True):
-            print(f'we are in if')
             account_number = serializer.validated_data['account_number']
             amount = serializer.validated_data['amount']
-            print(f'{amount=}')
             account = get_object_or_404(Account, number=account_number)
-            print(f'{account=}')
             if account.balance >= amount:
                 account.balance -= amount
                 account.save()
@@ -124,20 +117,16 @@ class AccountTransactionView(APIView):
         responses={200: AccountTransactionSerializer(many=True)}
     )
     def get(self, request):
-        try:
-            print(f'{request=}')
-            account_number = request.headers.get('account_number')
-            if not account_number:
-                return Response({"error": "Account Number is required"}, status=status.HTTP_400_BAD_REQUEST)
+        account_number = request.headers.get('account_number')
+        if not account_number:
+            return Response({"error": "Account Number is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-            account = get_object_or_404(Account, number=account_number)
-            transactions = AccountTransaction.objects.filter(account=account)
+        account = get_object_or_404(Account, number=account_number)
+        transactions = AccountTransaction.objects.filter(account=account)
 
-            serializer = AccountTransactionSerializer(transactions, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        serializer = AccountTransactionSerializer(transactions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-        except Exception as ex:
-            return ex
 
 
 

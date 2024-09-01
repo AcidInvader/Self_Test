@@ -5,6 +5,7 @@ from accounts.models import Account, AccountTransaction
 class AccountSerializer(serializers.ModelSerializer):
     """ Сериализатор для создания счета. """
     amount = serializers.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
     class Meta:
         model = Account
         fields = ['id', 'number', 'amount', 'currency']
@@ -34,6 +35,7 @@ class WithdrawAccountSerializer(TopUpAccountSerializer):
 
 class AccountTransactionSerializer(serializers.ModelSerializer):
     account_number = serializers.SerializerMethodField()
+
     class Meta:
         model = AccountTransaction
         fields = ['id', 'data', 'type', 'amount', 'account_number']
