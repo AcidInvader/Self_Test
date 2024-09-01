@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -26,7 +25,6 @@ SECRET_KEY = 'django-insecure-m9jk1d0&#ec1m1z4n8kzgw-q*ky_#rvhxvq@8i_qsy9@0!66gf
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -39,11 +37,20 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+THIRD_PARTY_APPS = [
+    'rest_framework',
+    'drf_spectacular',
+]
+
 LOCAL_APPS = [
     'accounts',
 ]
 
-INSTALLED_APPS += LOCAL_APPS
+INSTALLED_APPS += LOCAL_APPS + THIRD_PARTY_APPS
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -75,6 +82,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'fintech.wsgi.application'
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Banck Accounts',
+    'DESCRIPTION': 'API description',
+    'VERSION': '1.0.0',
+    'SCHEMA_PATH_PREFIX': '/api/v[0-9]',
+    'SWAGGER_UI_SETTINGS': {
+        'tryItOutEnabled': True,
+        'displayRequestDuration': True,
+        "persistAuthorization": True,
+        'filter': True,
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -85,7 +104,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -105,7 +123,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -116,7 +133,6 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
